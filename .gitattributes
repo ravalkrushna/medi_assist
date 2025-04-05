@@ -1,0 +1,4 @@
+# Handle line endings
+*.py text eol=lf
+*.env text eol=lf
+*.txt text eol=lf
