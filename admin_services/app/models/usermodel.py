@@ -16,10 +16,6 @@ class AdminUser(db.Model):
 
 def authenticate(username, password):
     user = AdminUser.query.filter_by(username=username).first()
-    if user:
-        print(f"User found: {username}")
-    else:
-        print("User not found")
     if user and user.check_password(password):
         return user
     return None
