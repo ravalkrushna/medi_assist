@@ -5,3 +5,4 @@ psycopg2-binary
 python-dotenv
 PyJWT
 Werkzeug
+PyJWT                  2.10.1
