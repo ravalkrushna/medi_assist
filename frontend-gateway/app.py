@@ -22,7 +22,7 @@ def auth_page():
 
 @app.route('/register', methods=['POST'])
 def gateway_register():
-    data = request.form  # From form submission
+    data = request.get_json()  # From form submission
     payload = {
         "name": data.get('name'),
         "email": data.get('email'),

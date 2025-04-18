@@ -6,11 +6,12 @@ import requests
 
 def register_user(name, email, password, age, gender):
     if not all([name, email, password, age, gender]):
-        return {"message": "All fields are required"}, 400
+        return jsonify({"message": "All fields are required"}), 400
 
     if User.query.filter_by(email=email).first():
-        return {"message": "Email already registered"}, 400
+        return jsonify({"message": "Email already registered"}), 400
 
+    print("in the service:",name)
     new_user = User(name=name, email=email, age=age, gender=gender)
     new_user.set_password(password)
 
@@ -24,12 +25,12 @@ def register_user(name, email, password, age, gender):
             "email": email
         })
         if response.status_code != 201:
-            return {"message": "User created, but failed to create patient profile"}, 500
+            return jsonify({"message": "User created, but failed to create patient profile"}), 500
     except Exception as e:
         print("Error contacting patient-service:", str(e))
-        return {"message": "User created, but failed to contact patient-service"}, 500
+        return jsonify({"message": "User created, but failed to contact patient-service"}), 500
 
-    return {"message": "User registered successfully"}, 201
+    return jsonify({"message": "User registered successfully"}), 201
 
 def login_user(email, password):
     user = User.query.filter_by(email=email).first()
@@ -64,6 +65,7 @@ def logout_user(request):
     if not auth_header or not auth_header.startswith("Bearer "):
         return jsonify({"message": "Token missing"}), 401
 
+    # If implementing token blacklisting, it would go here
     return jsonify({"message": "Logout successful"}), 200
 
 def reset_password(user_id, old_password, new_password):
