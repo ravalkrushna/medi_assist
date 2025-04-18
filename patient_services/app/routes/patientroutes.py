@@ -1,52 +1,30 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import (
-    create_access_token, jwt_required, get_jwt_identity
-)
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.patientmodel import Patient, HealthQuery
 from app.extension import db
 
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 
-
-# ✅ Register a new patient
-@patient_bp.route('/register', methods=['POST'])
-def register():
+@patient_bp.route('/create_profile', methods=['POST'])
+def create_patient_profile():
     data = request.get_json()
-    name = data.get('name')
-    email = data.get('email')
-    password = data.get('password')
+    auth_user_id = data.get("auth_user_id")
+    name = data.get("name")
+    email = data.get("email")
 
-    if not all([name, email, password]):
-        return jsonify(msg="All fields are required"), 400
+    if not all([auth_user_id, name, email]):
+        return jsonify(msg="Missing required fields"), 400
 
-    if Patient.query.filter_by(email=email).first():
-        return jsonify(msg="Email already registered"), 409
+    if Patient.query.filter_by(auth_user_id=auth_user_id).first():
+        return jsonify(msg="Profile already exists"), 409
 
-    hashed_password = generate_password_hash(password)
-    new_patient = Patient(name=name, email=email, password_hash=hashed_password)
-    db.session.add(new_patient)
+    patient = Patient(auth_user_id=auth_user_id, name=name, email=email)
+    db.session.add(patient)
     db.session.commit()
 
-    return jsonify(msg="Patient registered successfully"), 201
+    return jsonify(msg="Patient profile created successfully"), 201
 
-
-# ✅ Login and get access token
-@patient_bp.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-
-    patient = Patient.query.filter_by(email=email).first()
-    if not patient or not check_password_hash(patient.password_hash, password):
-        return jsonify(msg="Invalid credentials"), 401
-
-    access_token = create_access_token(identity=str(patient.id))
-    return jsonify(access_token=access_token), 200
-
-
-# ✅ View profile (GET)
 @patient_bp.route('/profile', methods=['GET'])
 @jwt_required()
 def view_profile():
@@ -63,8 +41,6 @@ def view_profile():
         "is_active": patient.is_active
     })
 
-
-# ✅ Update profile (PUT)
 @patient_bp.route('/profile/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_profile(id):
@@ -90,8 +66,6 @@ def update_profile(id):
     db.session.commit()
     return jsonify(msg="Profile updated successfully"), 200
 
-
-# ✅ Submit a health query
 @patient_bp.route('/query', methods=['POST'])
 @jwt_required()
 def submit_query():
@@ -113,8 +87,6 @@ def submit_query():
 
     return jsonify(msg="Health query submitted successfully"), 201
 
-
-# ✅ Get all queries submitted by logged-in patient
 @patient_bp.route('/my_queries', methods=['GET'])
 @jwt_required()
 def get_my_queries():

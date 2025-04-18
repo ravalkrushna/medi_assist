@@ -1,18 +1,18 @@
-# Use official Python image
+# Use official Python image (slim for smaller size)
 FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy all files
+# Copy all project files
 COPY . .
 
-# Install dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# Upgrade pip and install dependencies in one layer to speed up caching
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Expose port
-EXPOSE 5000
+# Expose the port the service runs on
+EXPOSE 5001
 
-# Run the app
+# Command to run the application
 CMD ["python", "run.py"]

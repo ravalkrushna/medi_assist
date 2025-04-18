@@ -1,17 +1,11 @@
-import os
 from flask import Flask
-from dotenv import load_dotenv
 from app.extension import db, jwt
 from app.routes.patientroutes import patient_bp
-
-load_dotenv()
+from app.config import Config  # Import Config class
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config.from_object(Config)  # Use config from the config file
 
     db.init_app(app)
     jwt.init_app(app)

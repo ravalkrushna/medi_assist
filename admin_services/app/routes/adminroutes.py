@@ -1,25 +1,10 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required
-from app.models.usermodel import authenticate
+
 from app.models.patientmodel import Patient
 from app.extension import db
 
 admin_bp = Blueprint("admin", __name__)
-
-# Login
-@admin_bp.route("/login", methods=["POST"])
-def login():
-    data = request.get_json()
-    username = data.get("username")
-    password = data.get("password")
-    user = authenticate(username, password)
-
-    if not user:
-        return jsonify({"msg": "Invalid credentials"}), 401
-
-    access_token = create_access_token(identity=username)
-    return jsonify(access_token=access_token), 200
-
 
 # Dashboard
 @admin_bp.route("/dashboard", methods=["GET"])
