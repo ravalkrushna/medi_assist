@@ -1,7 +1,0 @@
-Flask
-flask_sqlalchemy
-flask_jwt_extended
-python-dotenv
-psycopg2-binary
-werkzeug
-requests

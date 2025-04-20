@@ -1,18 +1,15 @@
-# Use official Python image (slim for smaller size)
 FROM python:3.10-slim
 
-# Set working directory
+# Install PostgreSQL client
+RUN apt-get update && apt-get install -y postgresql-client
+
 WORKDIR /app
 
-# Copy all project files
 COPY . .
 
-# Upgrade pip and install dependencies in one layer to speed up caching
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port the service runs on
-EXPOSE 5001
+# Make the script executable (Linux only)
+RUN chmod +x wait-for-db.sh
 
-# Command to run the application
-CMD ["python", "run.py"]
+CMD ["./wait-for-db.sh", "python", "app.py"]

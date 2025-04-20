@@ -1,120 +1,61 @@
+version: '3.8'
+
 services:
-  # Auth Service and DB
+  gateway:
+    build:
+      context: ./api-gateway
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
+    depends_on:
+      - auth-service
+      - admin-service
+
+  admin-service:
+    build:
+      context: ./admin-service
+    environment:
+      - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "5002:5002"
+    depends_on:
+      - db
+    networks:
+      - app-network
+    command: ["./wait-for-db.sh", "python", "app.py"]
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
   auth-service:
     build:
       context: ./auth-service
+    environment:
+      - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5001:5001"
-    networks:
-      - app-network
     depends_on:
-      - auth-db
-    env_file:
-      - .env
-    environment:
-      - FLASK_APP=run.py
-      - FLASK_ENV=${FLASK_ENV}
-      - DB_HOST=${AUTH_DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${AUTH_DB_NAME}
-
-  auth-db:
-    image: postgres:14
-    container_name: auth-db
+      - db
     networks:
       - app-network
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${AUTH_DB_NAME}
-
-  # Patient Service and DB
-  patient-service:
-    build:
-      context: ./patient_services
-    ports:
-      - "5002:5002"
-    networks:
-      - app-network
-    depends_on:
-      - patient-db
-    env_file:
-      - .env
-    environment:
-      - FLASK_APP=run.py
-      - FLASK_ENV=${FLASK_ENV}
-      - DB_HOST=${PATIENT_DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${PATIENT_DB_NAME}
-
-  patient-db:
-    image: postgres:14
-    container_name: patient-db
-    networks:
-      - app-network
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${PATIENT_DB_NAME}
-
-  # Admin Service and DB
-  admin-service:
-    build:
-      context: ./admin_services
-    ports:
-      - "5003:5003"
-    networks:
-      - app-network
-    depends_on:
-      - admin-db
-    env_file:
-      - .env
-    environment:
-      - FLASK_APP=run.py
-      - FLASK_ENV=${FLASK_ENV}
-      - DB_HOST=${ADMIN_DB_HOST}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${ADMIN_DB_NAME}
-
-  admin-db:
-    image: postgres:14
-    container_name: admin-db
-    networks:
-      - app-network
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${ADMIN_DB_NAME}
-
-  # Frontend Gateway
-  frontend-gateway:
-    build:
-      context: ./frontend-gateway
-    ports:
-      - "5000:5000"
-    depends_on:
-      - auth-service
-      - patient-service
-      - admin-service
-    networks:
-      - app-network
-    env_file:
-      - .env
-    environment:
-      - FLASK_APP=${FLASK_APP}
-      - FLASK_ENV=${FLASK_ENV}
-      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
-      - PATIENT_SERVICE_URL=${PATIENT_SERVICE_URL}
-      - ADMIN_SERVICE_URL=${ADMIN_SERVICE_URL}
+    command: ["./wait-for-db.sh", "python", "app.py"]
+  
+volumes:
+  pgdata:
 
 networks:
   app-network:

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login & Register</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 380px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      transition: all 0.5s ease;
+    }
+
+    .container h2 {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    .input-group label {
+      display: block;
+      color: #fff;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .input-group input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background: #ffffff;
+      color: #333;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background: #f1f1f1;
+    }
+
+    .switch {
+      text-align: center;
+      margin-top: 15px;
+      color: #fff;
+      font-size: 14px;
+    }
+
+    .switch span {
+      color: #ffd700;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="authContainer">
+    <h2 id="formTitle">Register</h2>
+
+    <!-- Register Form -->
+    <form id="registerForm">
+      <div class="input-group">
+        <label for="regName">Full Name</label>
+        <input type="text" id="regName" placeholder="John Doe" required />
+      </div>
+      <div class="input-group">
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" required />
+      </div>
+      <div class="input-group">
+        <label for="regPassword">Password</label>
+        <input type="password" id="regPassword" placeholder="Enter password" required />
+      </div>
+      <div class="input-group">
+        <label for="regAge">Age (optional)</label>
+        <input type="number" id="regAge" min="0" placeholder="20" />
+      </div>
+      <div class="input-group">
+        <label for="regGender">Gender</label>
+        <select id="regGender">
+          <option value="">Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <button type="submit" class="btn">Register</button>
+    </form>
+
+    <!-- Login Form -->
+    <form id="loginForm" class="hidden">
+        <div class="input-group">
+            <label for="logName">User Name</label>
+            <input type="text" id="logName" placeholder="John Doe" required />
+          </div>
+      <!-- <div class="input-group">
+        <label for="logEmail">Email</label>
+        <input type="email" id="logEmail" placeholder="you@example.com" required />
+      </div> -->
+      <div class="input-group">
+        <label for="logPassword">Password</label>
+        <input type="password" id="logPassword" placeholder="Enter password" required />
+      </div>
+      <button type="submit" class="btn">Login</button>
+    </form>
+
+    <div class="switch">
+      <span id="toggleForm">Already have an account? Login</span>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleForm');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const formTitle = document.getElementById('formTitle');
+
+    toggleBtn.addEventListener('click', () => {
+      if (registerForm.classList.contains('hidden')) {
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        formTitle.innerText = 'Register';
+        toggleBtn.innerHTML = 'Already have an account? <span>Login</span>';
+      } else {
+        registerForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        formTitle.innerText = 'Login';
+        toggleBtn.innerHTML = 'Don\'t have an account? <span>Register</span>';
+      }
+    });
+
+    registerForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const age = document.getElementById('regAge').value;
+      const gender = document.getElementById('regGender').value;
+      console.log(username)
+      console.log(email)
+      console.log(password)
+      console.log(age)
+      console.log(gender)
+      console.log("sending data ..")
+
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, age, gender })
+      });
+
+      const data = await response.json();
+      alert(data.message || 'Registered successfully.');
+
+      if (response.ok) {
+        registerForm.reset();
+        toggleBtn.click(); // switch to login
+      }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('logName').value;
+  const password = document.getElementById('logPassword').value;
+
+  const response = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })  
+  });
+
+  const data = await response.json();
+  if (response.ok) {
+    alert('Login successful!');
+    localStorage.setItem('token', data.access_token);
+
+    // Decode the token to get role info
+    const decoded = jwt_decode(data.access_token);
+    const role = decoded.role;
+
+    // Redirect based on role
+    if (role === 'admin') {
+      window.location.href = "/admin";
+    } else {
+      window.location.href = "/chatbot";
+    }
+
+  } else {
+    alert(data.message || 'Login failed!');
+  }
+});
+
+
+
+</script>
+
+</body>
+</html>
