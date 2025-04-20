@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Healthcare Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2980b9;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f5f7fa; color: #333; }
+    .dashboard { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 250px;
+      background-color: var(--dark-color);
+      color: white;
+      padding: 20px 0;
+    }
+    .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .sidebar-header h2 { display: flex; align-items: center; gap: 10px; font-size: 1.5rem; }
+    .sidebar-header h2 i { color: var(--primary-color); }
+
+    .sidebar-menu { padding: 20px 0; }
+    .menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .menu-item:hover { background-color: rgba(255, 255, 255, 0.1); }
+    .menu-item.active { background-color: var(--primary-color); border-left: 4px solid white; }
+    .menu-item i { width: 20px; text-align: center; }
+
+    .main-content { flex: 1; padding: 20px; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      margin-bottom: 20px;
+    }
+
+    .logout-btn {
+      background-color: var(--danger-color);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .logout-btn:hover { background-color: #c0392b; }
+
+    .content-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .patients-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .patients-table th, .patients-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    .patients-table th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+    }
+
+    .patients-table tr:hover { background-color: #f8f9fa; }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .status-active { background-color: #d4edda; color: #155724; }
+    .status-blocked { background-color: #f8d7da; color: #721c24; }
+
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .block-btn { background-color: var(--warning-color); color: white; }
+    .block-btn:hover { background-color: #e67e22; }
+
+    .unblock-btn { background-color: var(--success-color); color: white; }
+    .unblock-btn:hover { background-color: #27ae60; }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: var(--border-radius);
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard { flex-direction: column; }
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2><i class="fas fa-heartbeat"></i> HealthCare Admin</h2>
+      </div>
+      <div class="sidebar-menu">
+        <div class="menu-item active">
+          <i class="fas fa-users"></i>
+          <span>Patients</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="header">
+        <h1>Welcome, Admin</h1>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+
+      <div id="error-message" class="error-message"></div>
+
+      <div class="content-card">
+        <div class="card-header">
+          <h2><i class="fas fa-users"></i> Patient List</h2>
+          <input type="text" id="search-input" placeholder="Search..." style="padding: 8px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+        <table class="patients-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="patients-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("token");
+    const API_BASE = "http://localhost:5000";
+    const tableBody = document.getElementById("patients-body");
+    const errorBox = document.getElementById("error-message");
+
+    // Ensure this exists before search or rendering
+    window.allPatients = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!token) {
+        showError("Unauthorized. Please log in.");
+        return;
+      }
+      fetchPatients();
+      document.getElementById("search-input").addEventListener("input", filterPatients);
+    });
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+
+    function clearError() {
+      errorBox.textContent = "";
+      errorBox.style.display = "none";
+    }
+
+    async function fetchPatients() {
+      try {
+        clearError();
+        const res = await fetch(`${API_BASE}/admin/patients`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch patients.");
+        
+        const data = await res.json();
+        window.allPatients = Array.isArray(data) ? data : [];
+        renderPatients(window.allPatients);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function renderPatients(patients) {
+      tableBody.innerHTML = "";
+      patients.forEach(patient => {
+        const row = document.createElement("tr");
+        const status = patient.is_blocked ? "blocked" : "active";
+
+        row.innerHTML = `
+          <td>${patient.id}</td>
+          <td>${patient.username || 'N/A'}</td>
+          <td>${patient.email || 'N/A'}</td>
+          <td>${patient.role || 'N/A'}</td>
+          <td>
+            <span class="status ${status === 'active' ? 'status-active' : 'status-blocked'}">
+              ${status}
+            </span>
+          </td>
+          <td>
+            <button class="action-btn ${status === 'active' ? 'block-btn' : 'unblock-btn'}"
+              onclick="toggleStatus(${patient.id}, ${patient.is_blocked})">
+              ${status === 'active'
+                ? "<i class='fas fa-ban'></i> Block"
+                : "<i class='fas fa-check'></i> Unblock"}
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function toggleStatus(id, isBlocked) {
+      const action = isBlocked ? "unblock" : "block";
+      try {
+        clearError();
+        const res = await fetch(`${API_BASE}/admin/patients/${id}/${action}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error(`Failed to ${action} user.`);
+        fetchPatients(); // Refresh the list
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    function filterPatients(e) {
+      const search = e.target.value.toLowerCase();
+      const filtered = window.allPatients.filter(patient =>
+        (patient.username && patient.username.toLowerCase().includes(search)) ||
+        (patient.email && patient.email.toLowerCase().includes(search)) ||
+        (patient.role && patient.role.toLowerCase().includes(search))
+      );
+      renderPatients(filtered);
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      window.location.href = "/login"; // or full URL if needed
+    }
+  </script>
+</body>
+</html>
