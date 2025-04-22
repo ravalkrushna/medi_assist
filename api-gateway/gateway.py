@@ -62,14 +62,14 @@ def proxy_patient_users():
 @app.route("/admin/patients/<int:uid>/block", methods=["PUT"])
 def proxy_block(uid):
     token = request.headers.get("Authorization")
-    resp = requests.post(f"{ADMIN_URL}/admin/block/{uid}", headers={"Authorization": token})
+    resp = requests.put(f"{ADMIN_URL}/admin/block/{uid}", headers={"Authorization": token})
     return (resp.content, resp.status_code, resp.headers.items())
 
 # ✅ Unblock a user (change method to PUT and update URL)
 @app.route("/admin/patients/<int:uid>/unblock", methods=["PUT"])
 def proxy_unblock(uid):
     token = request.headers.get("Authorization")
-    resp = requests.post(f"{ADMIN_URL}/admin/unblock/{uid}", headers={"Authorization": token})
+    resp = requests.put(f"{ADMIN_URL}/admin/unblock/{uid}", headers={"Authorization": token})
     return (resp.content, resp.status_code, resp.headers.items())
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

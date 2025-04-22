@@ -234,6 +234,7 @@
         if (!res.ok) throw new Error("Failed to fetch patients.");
         
         const data = await res.json();
+
         window.allPatients = Array.isArray(data) ? data : [];
         renderPatients(window.allPatients);
       } catch (err) {
@@ -245,7 +246,10 @@
       tableBody.innerHTML = "";
       patients.forEach(patient => {
         const row = document.createElement("tr");
-        const status = patient.is_blocked ? "blocked" : "active";
+
+        
+        const status = patient.blocked ? "blocked" : "active";
+
 
         row.innerHTML = `
           <td>${patient.id}</td>
@@ -259,7 +263,7 @@
           </td>
           <td>
             <button class="action-btn ${status === 'active' ? 'block-btn' : 'unblock-btn'}"
-              onclick="toggleStatus(${patient.id}, ${patient.is_blocked})">
+              onclick="toggleStatus(${patient.id}, ${patient.blocked})">
               ${status === 'active'
                 ? "<i class='fas fa-ban'></i> Block"
                 : "<i class='fas fa-check'></i> Unblock"}
@@ -270,21 +274,54 @@
       });
     }
 
-    async function toggleStatus(id, isBlocked) {
-      const action = isBlocked ? "unblock" : "block";
-      try {
-        clearError();
-        const res = await fetch(`${API_BASE}/admin/patients/${id}/${action}`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` }
-        });
+    // async function toggleStatus(id, isBlocked) {
+    //   const action = isBlocked ? "unblock" : "block";
+    //   try {
+    //     clearError();
+    //     const res = await fetch(`${API_BASE}/admin/patients/${id}/${action}`, {
+    //       method: "PUT",
+    //       headers: { Authorization: `Bearer ${token}` }
+    //     });
 
-        if (!res.ok) throw new Error(`Failed to ${action} user.`);
-        fetchPatients(); // Refresh the list
-      } catch (err) {
-        showError(err.message);
-      }
-    }
+    //     if (!res.ok) throw new Error(`Failed to ${action} user.`);
+    //     fetchPatients(); // Refresh the list
+    //   } catch (err) {
+    //     showError(err.message);
+    //   }
+    // }
+
+
+
+
+
+
+
+    async function toggleStatus(id, isBlocked) {
+  const action = isBlocked ? "unblock" : "block";
+  try {
+    clearError();
+    const res = await fetch(`${API_BASE}/admin/patients/${id}/${action}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error(`Failed to ${action} user.`);
+
+    // Wait 200ms before fetching updated data
+    setTimeout(fetchPatients, 200);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+
+
+
+
+
+
+
+    
 
     function filterPatients(e) {
       const search = e.target.value.toLowerCase();
