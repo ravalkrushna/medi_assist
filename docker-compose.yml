@@ -12,6 +12,7 @@ services:
       - admin-service
       - auth-service
       - patient-service
+      - chatbot-service
 
   admin-service:
     build:
@@ -29,7 +30,7 @@ services:
       - db
     networks:
       - app-network
-    command: ["./wait-for-db.sh", "python", "app.py"]
+    command: [ "./wait-for-db.sh", "python", "app.py" ]
 
   auth-service:
     build:
@@ -45,7 +46,7 @@ services:
       - db
     networks:
       - app-network
-    command: ["./wait-for-db.sh", "python", "app.py"]
+    command: [ "./wait-for-db.sh", "python", "app.py" ]
 
   patient-service:
     build:
@@ -61,7 +62,16 @@ services:
       - db
     networks:
       - app-network
-    command: ["./wait-for-db.sh", "python", "app.py"]
+    command: [ "./wait-for-db.sh", "python", "app.py" ]
+
+  chatbot-service:
+    build:
+      context: ./chatbot-service
+    ports:
+      - "5004:5004"
+    networks:
+      - app-network
+    command: [ "python", "app.py" ]
 
   db:
     image: postgres:14
