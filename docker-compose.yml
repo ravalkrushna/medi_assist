@@ -9,14 +9,19 @@ services:
     networks:
       - app-network
     depends_on:
-      - auth-service
       - admin-service
+      - auth-service
 
   admin-service:
     build:
       context: ./admin-service
+    env_file:
+      - .env
     environment:
       - DB_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - "5002:5002"
     depends_on:

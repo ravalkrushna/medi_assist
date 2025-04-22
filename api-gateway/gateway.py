@@ -35,6 +35,8 @@ def login_user():
         return jsonify(res.json()), res.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({'message': 'Login failed', 'error': str(e)}), 500
+    
+    
 
 @app.route("/chatbot")
 def chatbot():
