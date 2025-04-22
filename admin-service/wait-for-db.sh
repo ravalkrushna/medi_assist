@@ -14,3 +14,5 @@ done
 
 echo "PostgreSQL is ready!"
 exec "$@"
+
+
