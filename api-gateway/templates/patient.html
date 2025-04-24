@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* (Keep all your existing CSS styles from the previous version) */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* (Keep all other CSS styles exactly as they were) */
+        
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- (Keep all your existing HTML structure from the previous version) -->
+        
+        <!-- Only updating the JavaScript part -->
+    </div>
+
+    <script>
+        // DOM elements
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const successMessage = document.getElementById('success-message');
+        const successText = document.getElementById('success-text');
+        const patientNameElement = document.getElementById('patient-name');
+        
+        // Profile elements
+        const viewProfile = document.getElementById('view-profile');
+        const editProfile = document.getElementById('edit-profile');
+        const profileForm = document.getElementById('profile-form');
+        
+        // Chatbot elements
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        
+        // Current patient data
+        let currentPatient = null;
+        const token = localStorage.getItem('token');
+        const API_BASE = 'http://localhost:5000'; // Your API gateway URL
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            fetchPatientProfile();
+            
+            // Form submission
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                updatePatientProfile();
+            });
+            
+            // Allow pressing Enter in chatbot
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Add welcome message from bot
+            addMessage("Hello! I'm your medical assistant. You can ask me about symptoms, diseases, or treatments.", 'bot');
+        });
+
+        // Fetch patient profile from API
+        async function fetchPatientProfile() {
+            try {
+                // First get the current user ID from the token (in a real app, you might decode the JWT)
+                const userRes = await fetch(`${API_BASE}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!userRes.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+                
+                const userData = await userRes.json();
+                const patientId = userData.id;
+                
+                // Then fetch the patient profile
+                const profileRes = await fetch(`${API_BASE}/profile/${patientId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!profileRes.ok) {
+                    throw new Error('Failed to fetch profile');
+                }
+                
+                currentPatient = await profileRes.json();
+                displayPatientProfile(currentPatient);
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Display patient profile data
+        function displayPatientProfile(patient) {
+            patientNameElement.textContent = patient.username || 'Patient';
+            
+            document.getElementById('profile-name').textContent = patient.username || 'Not provided';
+            document.getElementById('profile-email').textContent = patient.email || 'Not provided';
+            document.getElementById('profile-age').textContent = patient.age || 'Not provided';
+            document.getElementById('profile-gender').textContent = patient.gender || 'Not provided';
+            
+            // Set form values
+            document.getElementById('edit-name').value = patient.username || '';
+            document.getElementById('edit-age').value = patient.age || '';
+            document.getElementById('edit-gender').value = patient.gender || '';
+        }
+
+        // Toggle between view and edit modes
+        function toggleEditMode() {
+            if (viewProfile.style.display === 'none') {
+                viewProfile.style.display = 'block';
+                editProfile.style.display = 'none';
+                document.getElementById('edit-profile-btn').innerHTML = '<i class="fas fa-edit"></i> Edit Profile';
+            } else {
+                viewProfile.style.display = 'none';
+                editProfile.style.display = 'block';
+                document.getElementById('edit-profile-btn').innerHTML = '<i class="fas fa-times"></i> Cancel';
+            }
+        }
+
+        // Update patient profile
+        async function updatePatientProfile() {
+            try {
+                const updatedData = {
+                    name: document.getElementById('edit-name').value,
+                    age: document.getElementById('edit-age').value,
+                    gender: document.getElementById('edit-gender').value
+                };
+                
+                const patientId = currentPatient.id;
+                const res = await fetch(`${API_BASE}/profile/${patientId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                
+                if (!res.ok) {
+                    throw new Error('Failed to update profile');
+                }
+                
+                const data = await res.json();
+                showSuccess(data.message || 'Profile updated successfully');
+                fetchPatientProfile(); // Refresh the profile data
+                toggleEditMode(); // Switch back to view mode
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Chatbot functionality - UPDATED TO USE YOUR CHATBOT SERVICE
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (message === '') return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            userInput.value = '';
+            
+            try {
+                // Call your chatbot service through the API gateway
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get chatbot response');
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    addMessage("I'm sorry, I encountered an error. Please try again later.", 'bot');
+                } else {
+                    // Assuming your chatbot returns a response in data.response or similar
+                    const botResponse = data.response || "I'm not sure how to respond to that.";
+                    addMessage(botResponse, 'bot');
+                }
+            } catch (error) {
+                addMessage("Sorry, I'm having trouble connecting to the service. Please try again later.", 'bot');
+                console.error('Chatbot error:', error);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.textContent = text;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // (Keep all other functions exactly as they were - showSection, showError, showSuccess, logout)
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(`${sectionId}-section`).style.display = 'block';
+            
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const menuItems = document.querySelectorAll('.menu-item');
+            for (let item of menuItems) {
+                if (item.getAttribute('onclick').includes(sectionId)) {
+                    item.classList.add('active');
+                    break;
+                }
+            }
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.style.display = 'flex';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successText.textContent = message;
+            successMessage.style.display = 'flex';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>
