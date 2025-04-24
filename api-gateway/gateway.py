@@ -40,7 +40,7 @@ def login_user():
 
 @app.route("/chatbot")
 def chatbot():
-    return render_template("index.html")  # Final landing page after success
+    return render_template("patient.html")  # Final landing page after success
 
 
 # existing home/auth routes...
@@ -73,3 +73,24 @@ def proxy_unblock(uid):
     return (resp.content, resp.status_code, resp.headers.items())
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+# Add this to your existing api_gateway.py
+CHATBOT_URL = "http://chatbot-service:5004"
+
+# Chatbot route - Proxy to chatbot-service
+@app.route('/chat', methods=['POST'])
+def proxy_chatbot():
+    token = request.headers.get("Authorization")
+    data = request.get_json()
+    
+    try:
+        # Forward the request to the chatbot service
+        res = requests.post(
+            f"{CHATBOT_URL}/chat",
+            json=data,
+            headers={"Authorization": token}
+        )
+        return (res.content, res.status_code, res.headers.items())
+    except requests.exceptions.RequestException as e:
+        return jsonify({'message': 'Chatbot service unavailable', 'error': str(e)}), 503
