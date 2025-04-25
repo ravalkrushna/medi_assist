@@ -94,3 +94,11 @@ def proxy_chatbot():
         return (res.content, res.status_code, res.headers.items())
     except requests.exceptions.RequestException as e:
         return jsonify({'message': 'Chatbot service unavailable', 'error': str(e)}), 503
+    
+
+@app.route('/auth/me', methods=['GET'])
+def proxy_auth_me():
+    token = request.headers.get("Authorization")
+    headers = {"Authorization": token} if token else {}
+    resp = requests.get("http://auth-service:5001/me", headers=headers)
+    return (resp.content, resp.status_code, resp.headers.items())

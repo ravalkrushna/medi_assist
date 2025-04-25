@@ -81,6 +81,26 @@ def login():
     return jsonify(access_token=access_token)
 
 
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_me():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "role": user.role,
+        "gender": user.gender,
+        "age": user.age,
+        "blocked": user.is_blocked
+    }), 200
+
+
 
 @auth_bp.route('/protected', methods=['GET'])
 @jwt_required()
